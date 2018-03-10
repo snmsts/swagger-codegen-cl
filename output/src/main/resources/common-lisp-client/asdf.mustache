@@ -1,0 +1,13 @@
+{{=< >=}}(defsystem <&projectName>
+  :version "<&projectVersion>"
+  :description "<&projectDescription>"<#projectUrl>
+  :url "<&projectUrl>"</projectUrl><#projectLicenseName>
+  :license "<&projectLicenseName>"</projectLicenseName>
+  :components(
+(:file "src/core")
+<#apiInfo>
+<#apis>
+<#operations>(:file "src/api/<baseName>" :depends-on ("src/core"))</operations>
+</apis>
+</apiInfo>
+  ))

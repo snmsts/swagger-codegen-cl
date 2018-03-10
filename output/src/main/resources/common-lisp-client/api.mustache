@@ -1,28 +1,27 @@
+{{=< >=}}(defpackage <package>.<classname>
+  (:use #:<baseNamespace>.core)
+  (:export <#operations><#operation>#:<operationId>-with-http-info #:<operationId> </operation></operations>))
+(in-package :<package>.<classname>)
+<#operations><#operation>
+(defn <operationId>-with-http-info
+  "<&summary><#notes><&notes></notes>"<#hasOptionalParams>((<#allParams><#required><#isFile>^File </isFile><paramName> </required></allParams>) (<operationId>-with-http-info<#allParams><#required> <paramName></required></allParams> nil))</hasOptionalParams>
+  <#hasOptionalParams>(</hasOptionalParams>(<#allParams><#required><#isFile>^File </isFile><paramName> </required></allParams><#hasOptionalParams>{:keys (<#allParams><^required><#isFile>^File </isFile><paramName> </required></allParams>)}</hasOptionalParams>)<#hasRequiredParams>
 
-# This is a sample api mustache template.  It is representing a ficticous 
-# language and won't be usable or compile to anything without lots of changes.
-# Use it as an example.  You can access the variables in the generator object
-# like such:
+  <#hasOptionalParams> </hasOptionalParams>(check-required-params<#allParams><#required> <paramName></required></allParams>)</hasRequiredParams>
+  <#hasOptionalParams> </hasOptionalParams>(call-api "<path>" :<httpMethod>
+  <#hasOptionalParams> </hasOptionalParams>           :path-params  `(<#pathParams>:<baseName> ,<#collectionFormat>(with-collection-format <paramName> :<collectionFormat>)</collectionFormat><^collectionFormat><paramName></collectionFormat> </pathParams>)
+  <#hasOptionalParams> </hasOptionalParams>           :header-params`(<#headerParams>:<baseName> ,<#collectionFormat>(with-collection-format <paramName> :<collectionFormat>)</collectionFormat><^collectionFormat><paramName></collectionFormat> </headerParams>)
+  <#hasOptionalParams> </hasOptionalParams>           :query-params `(<#queryParams>:<baseName> ,<#collectionFormat>(with-collection-format <paramName> :<collectionFormat>)</collectionFormat><^collectionFormat><paramName></collectionFormat> </queryParams>)
+  <#hasOptionalParams> </hasOptionalParams>           :form-params  `(<#formParams>:<baseName> ,<#collectionFormat>(with-collection-format <paramName> :<collectionFormat>)</collectionFormat><^collectionFormat><paramName></collectionFormat> </formParams>)<#bodyParam>
+  <#hasOptionalParams> </hasOptionalParams>           :body-param    (or <paramName>())</bodyParam>
+  <#hasOptionalParams> </hasOptionalParams>           :content-types'(<#consumes>"<& mediaType>"<#hasMore> </hasMore></consumes>)
+  <#hasOptionalParams> </hasOptionalParams>           :accepts      '(<#produces>"<& mediaType>"<#hasMore> </hasMore></produces>)
+  <#hasOptionalParams> </hasOptionalParams>           :auth-names   '(<#authMethods>"<&name>"<#hasMore> </hasMore></authMethods>))<#hasOptionalParams>)</hasOptionalParams>)
 
-# use the package from the `apiPackage` variable
-package: {{package}}
-
-# operations block
-{{#operations}}
-classname: {{classname}}
-
-# loop over each operation in the API:
-{{#operation}}
-
-# each operation has an `operationId`:
-operationId: {{operationId}}
-
-# and parameters:
-{{#allParams}}
-{{paramName}}: {{dataType}}
-{{/allParams}}
-
-{{/operation}}
-
-# end of operations block
-{{/operations}}
+(defn <operationId>
+  "<&summary><#notes>
+  <&notes></notes>"<#hasOptionalParams>
+  ((<#allParams><#required><#isFile>^File </isFile><paramName> </required></allParams>) (<operationId><#allParams><#required> <paramName></required></allParams> nil))</hasOptionalParams>
+  <#hasOptionalParams>(</hasOptionalParams>(<#allParams><#required><#isFile>^File </isFile><paramName> </required></allParams><#hasOptionalParams>optional-params</hasOptionalParams>)
+  <#hasOptionalParams> </hasOptionalParams>(getf (<operationId>-with-http-info<#allParams><#required> <paramName></required></allParams><#hasOptionalParams> optional-params</hasOptionalParams>) :data)<#hasOptionalParams>)</hasOptionalParams>)
+</operation></operations>

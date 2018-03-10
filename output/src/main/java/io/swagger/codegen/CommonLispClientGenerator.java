@@ -1,122 +1,146 @@
 package io.swagger.codegen;
+// package io.swagger.codegen.languages;
 
-import io.swagger.codegen.*;
+import io.swagger.codegen.CliOption;
+import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
+import io.swagger.codegen.CodegenOperation;
+import io.swagger.codegen.CodegenType;
+import io.swagger.codegen.DefaultCodegen;
+import io.swagger.codegen.SupportingFile;
+
 import io.swagger.models.properties.*;
+import io.swagger.models.Swagger;
+import io.swagger.models.Info;
+import io.swagger.models.Contact;
+import io.swagger.models.License;
 
-import java.util.*;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Map;
+import java.util.List;
 import java.io.File;
 
 public class CommonLispClientGenerator extends DefaultCodegen implements CodegenConfig {
+  private static final String PROJECT_NAME = "projectName";
+  private static final String PROJECT_DESCRIPTION = "projectDescription";
+  private static final String PROJECT_VERSION = "projectVersion";
+  private static final String PROJECT_URL = "projectUrl";
+  private static final String PROJECT_LICENSE_NAME = "projectLicenseName";
+  private static final String PROJECT_LICENSE_URL = "projectLicenseUrl";
+  private static final String BASE_NAMESPACE = "baseNamespace";
 
-  // source folder where to write the files
+  protected String projectName;
+  protected String projectDescription;
+  protected String projectVersion;
+  protected String baseNamespace;
+
   protected String sourceFolder = "src";
   protected String apiVersion = "1.0.0";
 
-  /**
-   * Configures the type of generator.
-   * 
-   * @return  the CodegenType for this generator
-   * @see     io.swagger.codegen.CodegenType
-   */
+@Override    
   public CodegenType getTag() {
     return CodegenType.CLIENT;
   }
 
-  /**
-   * Configures a friendly name for the generator.  This will be used by the generator
-   * to select the library with the -l flag.
-   * 
-   * @return the friendly name for the generator
-   */
+@Override
   public String getName() {
     return "common-lisp-client";
   }
 
-  /**
-   * Returns human-friendly help for the generator.  Provide the consumer with help
-   * tips, parameters here
-   * 
-   * @return A string value for the help message
-   */
+@Override
   public String getHelp() {
     return "Generates a common-lisp-client client library.";
   }
 
   public CommonLispClientGenerator() {
     super();
+    outputFolder = "generated-code" + File.separator + "common-lisp-client";
+    apiTemplateFiles.put("api.mustache", ".lisp");
+    embeddedTemplateDir = templateDir = "common-lisp-client";
 
-    // set the output folder here
-    outputFolder = "generated-code/common-lisp-client";
+    cliOptions.add(new CliOption(PROJECT_NAME,"name of the project (Default: generated from info.title or \"swagger-cl-client\")"));
+    cliOptions.add(new CliOption(PROJECT_DESCRIPTION,"description of the project (Default: using info.description or \"Client library of <projectNname>\")"));
+    cliOptions.add(new CliOption(PROJECT_VERSION,"version of the project (Default: using info.version or \"1.0.0\")"));
+    cliOptions.add(new CliOption(PROJECT_URL,"URL of the project (Default: using info.contact.url or not included in .asd file)"));
+    cliOptions.add(new CliOption(PROJECT_LICENSE_NAME,"name of the license the project uses (Default: using info.license.name or not included in .asd file)"));
+    cliOptions.add(new CliOption(PROJECT_LICENSE_URL,"URL of the license the project uses (Default: using info.license.url or not included in .asd file)"));
+    cliOptions.add(new CliOption(BASE_NAMESPACE,"the base/top namespace (Default: generated from projectName)"));
+  }
+  @Override
+  public void preprocessSwagger(Swagger swagger) {
+      super.preprocessSwagger(swagger);
 
-    /**
-     * Models.  You can write model files using the modelTemplateFiles map.
-     * if you want to create one template for file, you can do so here.
-     * for multiple files for model, just put another entry in the `modelTemplateFiles` with
-     * a different extension
-     */
-    modelTemplateFiles.put(
-      "model.mustache", // the template to use
-      ".sample");       // the extension for each file to write
+      if (additionalProperties.containsKey(PROJECT_NAME)) {
+          projectName = ((String) additionalProperties.get(PROJECT_NAME));
+      }
+      if (additionalProperties.containsKey(PROJECT_DESCRIPTION)) {
+          projectDescription = ((String) additionalProperties.get(PROJECT_DESCRIPTION));
+      }
+      if (additionalProperties.containsKey(PROJECT_VERSION)) {
+          projectVersion = ((String) additionalProperties.get(PROJECT_VERSION));
+      }
+      if (additionalProperties.containsKey(BASE_NAMESPACE)) {
+          baseNamespace = ((String) additionalProperties.get(BASE_NAMESPACE));
+      }
 
-    /**
-     * Api classes.  You can write classes for each Api file with the apiTemplateFiles map.
-     * as with models, add multiple entries with different extensions for multiple files per
-     * class
-     */
-    apiTemplateFiles.put(
-      "api.mustache",   // the template to use
-      ".sample");       // the extension for each file to write
+      if (swagger.getInfo() != null) {
+          Info info = swagger.getInfo();
+          if (projectName == null &&  info.getTitle() != null) {
+              // when projectName is not specified, generate it from info.title
+              projectName = dashize(info.getTitle());
+          }
+          if (projectVersion == null) {
+              // when projectVersion is not specified, use info.version
+              projectVersion = info.getVersion();
+          }
+          if (projectDescription == null) {
+              // when projectDescription is not specified, use info.description
+              projectDescription = info.getDescription();
+          }
 
-    /**
-     * Template Location.  This is the location which templates will be read from.  The generator
-     * will use the resource stream to attempt to read the templates.
-     */
-    templateDir = "common-lisp-client";
+          if (info.getContact() != null) {
+              Contact contact = info.getContact();
+              if (additionalProperties.get(PROJECT_URL) == null) {
+                  additionalProperties.put(PROJECT_URL, contact.getUrl());
+              }
+          }
+          if (info.getLicense() != null) {
+              License license = info.getLicense();
+              if (additionalProperties.get(PROJECT_LICENSE_NAME) == null) {
+                  additionalProperties.put(PROJECT_LICENSE_NAME, license.getName());
+              }
+              if (additionalProperties.get(PROJECT_LICENSE_URL) == null) {
+                  additionalProperties.put(PROJECT_LICENSE_URL, license.getUrl());
+              }
+          }
+      }
 
-    /**
-     * Api Package.  Optional, if needed, this can be used in templates
-     */
-    apiPackage = "io.swagger.client.api";
+      // default values
+      if (projectName == null) {
+          projectName = "swagger-cl-client";
+      }
+      if (projectVersion == null) {
+          projectVersion = "1.0.0";
+      }
+      if (projectDescription == null) {
+          projectDescription = "Client library of " + projectName;
+      }
+      if (baseNamespace == null) {
+          baseNamespace = dashize(projectName);
+      }
+      apiPackage = baseNamespace + ".api";
 
-    /**
-     * Model Package.  Optional, if needed, this can be used in templates
-     */
-    modelPackage = "io.swagger.client.model";
+      additionalProperties.put(PROJECT_NAME, projectName);
+      additionalProperties.put(PROJECT_DESCRIPTION, escapeText(projectDescription));
+      additionalProperties.put(PROJECT_VERSION, projectVersion);
+      additionalProperties.put(BASE_NAMESPACE, baseNamespace);
+      additionalProperties.put(CodegenConstants.API_PACKAGE, apiPackage);
 
-    /**
-     * Reserved words.  Override this with reserved words specific to your language
-     */
-    reservedWords = new HashSet<String> (
-      Arrays.asList(
-        "sample1",  // replace with static values
-        "sample2")
-    );
-
-    /**
-     * Additional Properties.  These values can be passed to the templates and
-     * are available in models, apis, and supporting files
-     */
-    additionalProperties.put("apiVersion", apiVersion);
-
-    /**
-     * Supporting Files.  You can write single files for the generator with the
-     * entire object tree available.  If the input file has a suffix of `.mustache
-     * it will be processed by the template engine.  Otherwise, it will be copied
-     */
-    supportingFiles.add(new SupportingFile("myFile.mustache",   // the input template or file
-      "",                                                       // the destination folder, relative `outputFolder`
-      "myFile.sample")                                          // the output file
-    );
-
-    /**
-     * Language Specific Primitives.  These types will not trigger imports by
-     * the client generator
-     */
-    languageSpecificPrimitives = new HashSet<String>(
-      Arrays.asList(
-        "Type1",      // replace these with your types
-        "Type2")
-    );
+      supportingFiles.add(new SupportingFile("asdf.mustache", "", projectName + ".asd"));
+      supportingFiles.add(new SupportingFile("core.mustache", sourceFolder, "core.lisp"));
+      supportingFiles.add(new SupportingFile("git_push.sh.mustache", "", "git_push.sh"));
+      supportingFiles.add(new SupportingFile("gitignore.mustache", "", ".gitignore"));
   }
 
   /**
@@ -136,15 +160,6 @@ public class CommonLispClientGenerator extends DefaultCodegen implements Codegen
    */
   public String modelFileFolder() {
     return outputFolder + "/" + sourceFolder + "/" + modelPackage().replace('.', File.separatorChar);
-  }
-
-  /**
-   * Location to write api files.  You can use the apiPackage() as defined when the class is
-   * instantiated
-   */
-  @Override
-  public String apiFileFolder() {
-    return outputFolder + "/" + sourceFolder + "/" + apiPackage().replace('.', File.separatorChar);
   }
 
   /**
@@ -187,5 +202,80 @@ public class CommonLispClientGenerator extends DefaultCodegen implements Codegen
     else
       type = swaggerType;
     return toModelName(type);
+  }
+  @SuppressWarnings("static-method")
+  protected String namespaceToFolder(String ns) {
+      return ns.replace(".", File.separator).replace("-", "_");
+  }
+  @Override
+  public String sanitizeTag(String tag) {
+      return tag.replaceAll("[^a-zA-Z_]+", "_");
+  }
+
+  @Override
+  public String apiFileFolder() {
+      return outputFolder + File.separator + sourceFolder + File.separator + "api";
+  }
+
+  @Override
+  public String toOperationId(String operationId) {
+      // throw exception if method name is empty
+      if (StringUtils.isEmpty(operationId)) {
+          throw new RuntimeException("Empty method/operation name (operationId) not allowed");
+      }
+      return dashize(sanitizeName(operationId));
+  }
+
+  @Override
+  public String toApiFilename(String name) {
+      return underscore(toApiName(name));
+  }
+
+  @Override
+  public String toApiName(String name) {
+      return dashize(name);
+  }
+
+  @Override
+  public String toParamName(String name) {
+      return toVarName(name);
+  }
+
+  @Override
+  public String toVarName(String name) {
+      name = name.replaceAll("[^a-zA-Z0-9_-]+", ""); // FIXME: a parameter should not be assigned. Also declare the methods parameters as 'final'.
+      name = dashize(name);
+      return name;
+  }
+
+  @Override
+  public String escapeText(String input) {
+      if (input == null) {
+          return null;
+      }
+      return input.trim().replace("\\", "\\\\").replace("\"", "\\\"");
+  }
+
+  @Override
+  public Map<String, Object> postProcessOperations(Map<String, Object> operations) {
+      Map<String, Object> objs = (Map<String, Object>) operations.get("operations");
+      List<CodegenOperation> ops = (List<CodegenOperation>) objs.get("operation");
+      for (CodegenOperation op : ops) {
+          // Convert httpMethod to lower case, e.g. "get", "post"
+          op.httpMethod = op.httpMethod.toLowerCase();
+      }
+      return operations;
+  }
+
+  @Override
+  public String escapeQuotationMark(String input) {
+      // remove " to avoid code injection
+      return input.replace("\"", "");
+  }
+
+  @Override
+  public String escapeUnsafeCharacters(String input) {
+      // ref: https://clojurebridge.github.io/community-docs/docs/clojure/comment/
+      return input.replace("(comment", "(_comment");
   }
 }
